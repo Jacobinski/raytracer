@@ -1,6 +1,6 @@
 use color::Color;
 use ray::Ray;
-use vec3::{Point3, Vec3};
+use vec3::{unit_vector, Point3, Vec3};
 
 mod color;
 mod ray;
@@ -17,8 +17,10 @@ const VIEWPORT_WIDTH: f32 = VIEWPORT_HEIGHT * IMAGE_WIDTH as f32 / IMAGE_HEIGHT 
 
 const MAX_COLOR: i32 = 256;
 
-fn color(_ray: Ray) -> Color {
-    Color::new(0.0, 0.0, 0.0)
+fn color(ray: Ray) -> Color {
+    let unit_direction = unit_vector(ray.direction());
+    let a = 0.5 * (unit_direction.y() + 1.0);
+    (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
 }
 
 fn main() {
@@ -50,12 +52,6 @@ fn main() {
             let ray = Ray::new(camera_center, ray_direction);
             let color = color(ray);
             color.output();
-            // let pixel = Color::new(
-            //     i as f32 / (IMAGE_WIDTH - 1) as f32,
-            //     j as f32 / (IMAGE_HEIGHT - 1) as f32,
-            //     0.0,
-            // );
-            // pixel.output();
         }
     }
     // eprintln!("done");
