@@ -2,8 +2,10 @@ use color::Color;
 use vec3::{Point3, Vec3};
 
 mod color;
+mod ray;
 mod vec3;
 
+const ASPECT_RATIO: f32 = 16.0 / 9.0;
 const IMAGE_WIDTH: i32 = 256;
 const IMAGE_HEIGHT: i32 = 256;
 const MAX_COLOR: i32 = 256;
