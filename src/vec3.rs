@@ -11,6 +11,10 @@ pub fn unit_vector(v: Vec3) -> Vec3 {
     v / v.length()
 }
 
+pub fn dot(u: Vec3, v: Vec3) -> f32 {
+    u.e[0] * v.e[0] + u.e[1] * v.e[1] + u.e[2] * v.e[2]
+}
+
 impl Vec3 {
     pub fn new(e0: f32, e1: f32, e2: f32) -> Self {
         Self { e: [e0, e1, e2] }
