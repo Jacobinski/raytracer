@@ -3,7 +3,9 @@ use ray::Ray;
 use vec3::{dot, unit_vector, Point3, Vec3};
 
 mod color;
+mod hittable;
 mod ray;
+mod sphere;
 mod vec3;
 
 const ASPECT_RATIO: f32 = 16.0 / 9.0;
