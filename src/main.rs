@@ -1,9 +1,14 @@
+use core::f32;
+
 use color::Color;
+use hittable_list::HittableList;
 use ray::Ray;
-use vec3::{dot, unit_vector, Point3, Vec3};
+use sphere::Sphere;
+use vec3::{unit_vector, Point3, Vec3};
 
 mod color;
 mod hittable;
+mod hittable_list;
 mod ray;
 mod sphere;
 mod vec3;
@@ -19,33 +24,23 @@ const VIEWPORT_WIDTH: f32 = VIEWPORT_HEIGHT * IMAGE_WIDTH as f32 / IMAGE_HEIGHT 
 
 const MAX_COLOR: i32 = 256;
 
-fn color(r: Ray) -> Color {
-    if let Some(t) = hit_sphere(Point3::new(0.0, 0.0, -1.0), 0.5, r) {
-        let n = unit_vector(r.at(t) - Vec3::new(0.0, 0.0, -1.0));
-        return 0.5 * Color::new(n.x() + 1.0, n.y() + 1.0, n.z() + 1.0);
+fn color(r: Ray, world: &HittableList) -> Color {
+    if let Some(rec) = world.hit(r, 0.0, f32::INFINITY) {
+        return 0.5 * (rec.normal + Color::new(1.0, 1.0, 1.0));
     }
     let unit_direction = unit_vector(r.direction());
     let a = 0.5 * (unit_direction.y() + 1.0);
     (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
 }
 
-fn hit_sphere(center: Point3, radius: f32, r: Ray) -> Option<f32> {
-    let oc = center - r.origin();
-    let a = r.direction().length_squared();
-    let h = dot(r.direction(), oc);
-    let c = oc.length_squared() - radius * radius;
-    let discriminant = h * h - a * c;
-    if discriminant >= 0.0 {
-        Some((h - f32::sqrt(discriminant)) / a)
-    } else {
-        None
-    }
-}
-
 fn main() {
     println!("P3");
     println!("{} {}", IMAGE_WIDTH, IMAGE_HEIGHT);
     println!("{}", MAX_COLOR);
+
+    let mut world = HittableList::new();
+    world.add(Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5)));
+    world.add(Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0)));
 
     let camera_center = Point3::new(0.0, 0.0, 0.0);
 
@@ -69,7 +64,7 @@ fn main() {
             let ray_direction = pixel_center - camera_center;
 
             let ray = Ray::new(camera_center, ray_direction);
-            let color = color(ray);
+            let color = color(ray, &world);
             color.output();
         }
     }
