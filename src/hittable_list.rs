@@ -1,5 +1,6 @@
 use crate::{
     hittable::{HitRecord, Hittable},
+    interval::Interval,
     ray::Ray,
 };
 
@@ -18,10 +19,10 @@ impl HittableList {
         self.objects.push(item);
     }
 
-    pub fn hit(&self, r: Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
+    pub fn hit(&self, r: Ray, time: &Interval) -> Option<HitRecord> {
         let mut closest: Option<HitRecord> = None;
         for object in &self.objects {
-            if let Some(record) = object.hit(r, t_min, t_max) {
+            if let Some(record) = object.hit(r, time) {
                 match closest {
                     Some(c) => {
                         if record.t < c.t {

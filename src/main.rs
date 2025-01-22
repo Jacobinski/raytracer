@@ -2,6 +2,7 @@ use core::f32;
 
 use color::Color;
 use hittable_list::HittableList;
+use interval::Interval;
 use ray::Ray;
 use sphere::Sphere;
 use vec3::{unit_vector, Point3, Vec3};
@@ -9,6 +10,7 @@ use vec3::{unit_vector, Point3, Vec3};
 mod color;
 mod hittable;
 mod hittable_list;
+mod interval;
 mod ray;
 mod sphere;
 mod vec3;
@@ -25,7 +27,7 @@ const VIEWPORT_WIDTH: f32 = VIEWPORT_HEIGHT * IMAGE_WIDTH as f32 / IMAGE_HEIGHT 
 const MAX_COLOR: i32 = 256;
 
 fn color(r: Ray, world: &HittableList) -> Color {
-    if let Some(rec) = world.hit(r, 0.0, f32::INFINITY) {
+    if let Some(rec) = world.hit(r, &Interval::new(0.0, f32::INFINITY)) {
         return 0.5 * (rec.normal + Color::new(1.0, 1.0, 1.0));
     }
     let unit_direction = unit_vector(r.direction());

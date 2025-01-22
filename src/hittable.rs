@@ -1,3 +1,4 @@
+use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::vec3::{dot, Point3, Vec3};
 
@@ -26,5 +27,5 @@ impl HitRecord {
 
 pub trait Hittable {
     /// Determines if a ray intersects the object within the given time range.
-    fn hit(&self, r: Ray, t_min: f32, t_max: f32) -> Option<HitRecord>;
+    fn hit(&self, r: Ray, time: &Interval) -> Option<HitRecord>;
 }
