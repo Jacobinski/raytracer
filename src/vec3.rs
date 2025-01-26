@@ -1,6 +1,6 @@
 use std::ops::{Add, Div, Mul, Sub};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Vec3 {
     e: [f32; 3],
 }
@@ -13,6 +13,12 @@ pub fn unit_vector(v: Vec3) -> Vec3 {
 
 pub fn dot(u: Vec3, v: Vec3) -> f32 {
     u.e[0] * v.e[0] + u.e[1] * v.e[1] + u.e[2] * v.e[2]
+}
+
+impl Default for Vec3 {
+    fn default() -> Self {
+        Self { e: [0.0, 0.0, 0.0] }
+    }
 }
 
 impl Vec3 {
@@ -79,7 +85,7 @@ impl Mul<Vec3> for f32 {
     }
 }
 
-impl Mul<Vec3> for i32 {
+impl Mul<Vec3> for u32 {
     type Output = Vec3;
 
     fn mul(self, rhs: Vec3) -> Vec3 {
