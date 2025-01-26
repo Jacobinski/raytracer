@@ -16,6 +16,7 @@ pub const UNIVERSE: Interval = Interval {
 
 impl Interval {
     pub fn new(min: f32, max: f32) -> Self {
+        assert!(min <= max);
         Self { min, max }
     }
 
@@ -25,5 +26,9 @@ impl Interval {
 
     pub fn surrounds(&self, val: f32) -> bool {
         self.min < val && val < self.max
+    }
+
+    pub fn clamp(&self, x: f32) -> f32 {
+        x.clamp(self.min, self.max)
     }
 }
