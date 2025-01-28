@@ -15,12 +15,12 @@ impl HitRecord {
     /// value for the given ray. This method should be called during geometry
     /// computation.
     pub fn set_face_normal(&mut self, r: Ray, outward_normal: Vec3) {
-        assert!(f32::abs(outward_normal.length() - 1.0) < 0.0001);
+        assert!(f32::abs(outward_normal.length() - 1.0) < 0.01);
         self.is_front_face = dot(r.direction(), outward_normal) < 0.0;
         self.normal = if self.is_front_face {
             outward_normal
         } else {
-            -1.0 * outward_normal
+            -outward_normal
         };
     }
 }

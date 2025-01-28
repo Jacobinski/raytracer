@@ -3,7 +3,7 @@ use crate::hittable_list::HittableList;
 use crate::interval::Interval;
 use crate::random::Rng;
 use crate::ray::Ray;
-use crate::vec3::{unit_vector, Point3, Vec3};
+use crate::vec3::{dot, unit_vector, Point3, Vec3};
 
 // The maximum value for each color according to the PPM specification.
 const MAX_COLOR: i32 = 256;
@@ -27,9 +27,21 @@ pub struct CameraBuilder {
     camera: Camera,
 }
 
-fn color(r: Ray, world: &HittableList) -> Color {
+// Aligns a given vector with the normal. Concretely, ensures that the
+// dot product between the vector and normal is not negative.
+fn align(vec: Vec3, normal: Vec3) -> Vec3 {
+    if dot(vec, normal) >= 0.0 {
+        vec
+    } else {
+        -vec
+    }
+}
+
+fn color(r: Ray, world: &HittableList, rng: &mut Rng) -> Color {
     if let Some(rec) = world.hit(r, &Interval::new(0.0, f32::INFINITY)) {
-        return 0.5 * (rec.normal + Color::new(1.0, 1.0, 1.0));
+        let v = Vec3::new_random_unit_vector(rng);
+        let scatter_direction = align(v, rec.normal);
+        return 0.5 * color(Ray::new(rec.pt, scatter_direction), world, rng);
     }
     let unit_direction = unit_vector(r.direction());
     let a = 0.5 * (unit_direction.y() + 1.0);
@@ -52,13 +64,13 @@ impl Camera {
                     let mut c = Color::new(0.0, 0.0, 0.0);
                     for _sample in 0..self.samples_per_pixel {
                         let ray = self.stochastic_ray(i, j, rng);
-                        c = c + color(ray, world);
+                        c = c + color(ray, world, rng);
                     }
                     c = c / self.samples_per_pixel as f32;
                     c.output();
                 } else {
                     let ray = self.standard_ray(i, j);
-                    let c = color(ray, world);
+                    let c = color(ray, world, rng);
                     c.output();
                 }
             }
