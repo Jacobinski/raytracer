@@ -11,6 +11,12 @@ const MAX_COLOR: u32 = 256;
 // The maximum number of ray bounces into the scene.
 const MAX_RAY_BOUNCES: u32 = 8;
 
+// The minimum time required for a reflected ray to intersect a surface.
+// This prevents floating-point errors from putting a reflected ray behind
+// the incident surface and immediately intersecting with the surface.
+// Some literature calls this "shadow acne".
+const MIN_RAY_INTERSECTION_TIME: f64 = 0.001;
+
 #[derive(Debug, PartialEq, Default)]
 pub struct Camera {
     /// Public modifiable state
@@ -44,11 +50,11 @@ fn color(r: Ray, depth: u32, world: &HittableList, rng: &mut Rng) -> Color {
     if depth == 0 {
         return Color::new(0.0, 0.0, 0.0);
     }
-    if let Some(rec) = world.hit(r, &Interval::new(0.0, f64::INFINITY)) {
+    if let Some(rec) = world.hit(r, &Interval::new(MIN_RAY_INTERSECTION_TIME, f64::INFINITY)) {
         let v = Vec3::new_random_unit_vector(rng);
-        let scatter_direction = align(v, rec.normal);
-        let scatter_ray = Ray::new(rec.pt, scatter_direction);
-        return 0.5 * color(scatter_ray, depth - 1, world, rng);
+        let reflect_direction = align(v, rec.normal);
+        let reflect_ray = Ray::new(rec.pt, reflect_direction);
+        return 0.5 * color(reflect_ray, depth - 1, world, rng);
     }
     let unit_direction = unit_vector(r.direction());
     let a = 0.5 * (unit_direction.y() + 1.0);
