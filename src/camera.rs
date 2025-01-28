@@ -1,6 +1,7 @@
 use crate::color::Color;
 use crate::hittable_list::HittableList;
 use crate::interval::Interval;
+use crate::random::RNG;
 use crate::ray::Ray;
 use crate::vec3::{unit_vector, Point3, Vec3};
 
@@ -11,7 +12,8 @@ const MAX_COLOR: i32 = 256;
 pub struct Camera {
     /// Public modifiable state
     aspect_ratio: f32, // Ratio of image width over height.
-    image_width: u32, // Rendered image width in pixel count
+    image_width: u32,       // Rendered image width in pixel count
+    samples_per_pixel: u32, // Number of samples for anti-aliasing
 
     /// Private internal state
     image_height: u32, // Height of rendered image
@@ -39,22 +41,54 @@ impl Camera {
         CameraBuilder::new()
     }
 
-    pub fn render(&self, world: &HittableList) {
+    pub fn render(&self, world: &HittableList, rng: &mut RNG) {
         println!("P3");
         println!("{} {}", self.image_width, self.image_height);
         println!("{}", MAX_COLOR);
 
         for j in 0..self.image_height {
             for i in 0..self.image_width {
-                let pixel_center =
-                    self.pixel00 + (i * self.pixel_delta_u) + (j * self.pixel_delta_v);
-                let ray_direction = pixel_center - self.center;
-                let ray = Ray::new(self.center, ray_direction);
-
-                let color = color(ray, world);
-                color.output();
+                if self.antialiasing_enabled() {
+                    let mut c = Color::new(0.0, 0.0, 0.0);
+                    for _sample in 0..self.samples_per_pixel {
+                        let ray = self.stochastic_ray(i, j, rng);
+                        c = c + color(ray, world);
+                    }
+                    c = c / self.samples_per_pixel as f32;
+                    c.output();
+                } else {
+                    let ray = self.standard_ray(i, j);
+                    let c = color(ray, world);
+                    c.output();
+                }
             }
         }
+    }
+
+    fn antialiasing_enabled(&self) -> bool {
+        self.samples_per_pixel > 1
+    }
+
+    // Constructs a Ray from the Camera to the viewport pixel (u, v) with a bit
+    // of stochastic offsetting to allow for anti-aliasing.
+    fn stochastic_ray(&self, u: u32, v: u32, rng: &mut RNG) -> Ray {
+        let x = rng.generate() - 0.5;
+        let y = rng.generate() - 0.5;
+        let pixel = self.pixel00
+            + ((u as f32 + x) * self.pixel_delta_u)
+            + ((v as f32 + y) * self.pixel_delta_v);
+        let origin = self.center;
+        let direction = pixel - origin;
+        Ray::new(origin, direction)
+    }
+
+    // Constructs a Ray from the Camera to the viewport pixel (u, v) without
+    // any randomness.
+    fn standard_ray(&self, u: u32, v: u32) -> Ray {
+        let pixel = self.pixel00 + (u * self.pixel_delta_u) + (v * self.pixel_delta_v);
+        let origin = self.center;
+        let direction = pixel - origin;
+        Ray::new(origin, direction)
     }
 }
 
@@ -64,6 +98,7 @@ impl CameraBuilder {
             camera: Camera {
                 aspect_ratio: 1.0,
                 image_width: 100,
+                samples_per_pixel: 1,
                 ..Default::default()
             },
         }
@@ -71,13 +106,24 @@ impl CameraBuilder {
 
     /// Ratio of image width over height.
     pub fn aspect_ratio(mut self, ratio: f32) -> Self {
+        assert!(ratio > 0.0);
         self.camera.aspect_ratio = ratio;
         self
     }
 
     /// Rendered image width in pixel count
     pub fn image_width(mut self, width: u32) -> Self {
+        assert!(width > 0);
         self.camera.image_width = width;
+        self
+    }
+
+    /// Number of samples for anti-aliasing.
+    /// Input value must be greater than or equal to one.
+    /// A value of exactly one disables anti-aliasing.
+    pub fn samples_per_pixel(mut self, samples_per_pixel: u32) -> Self {
+        assert!(samples_per_pixel >= 1);
+        self.camera.samples_per_pixel = samples_per_pixel;
         self
     }
 
@@ -86,6 +132,8 @@ impl CameraBuilder {
         // Extract builder variables
         let image_width = self.camera.image_width;
         let aspect_ratio = self.camera.aspect_ratio;
+        let samples_per_pixel = self.camera.samples_per_pixel;
+        assert!(samples_per_pixel >= 1);
 
         // Determine height of output image
         let image_height = (image_width as f32 / aspect_ratio) as u32;
@@ -114,6 +162,7 @@ impl CameraBuilder {
         Camera {
             aspect_ratio,
             image_width,
+            samples_per_pixel,
             image_height,
             center,
             pixel00,
@@ -128,6 +177,7 @@ fn builder_test() {
     let camera = Camera {
         aspect_ratio: 2.0,
         image_width: 200,
+        samples_per_pixel: 1,
         image_height: 100,
         center: Point3::new(0.0, 0.0, 0.0),
         pixel00: Point3::new(-1.99, 0.99, -1.0),

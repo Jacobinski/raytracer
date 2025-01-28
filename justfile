@@ -12,6 +12,7 @@ publish:
     magick image.ppm raytrace.png
 
 diff:
+    rm -f /tmp/raytrace.png
     magick image.ppm /tmp/raytrace.png
     compare raytrace.png /tmp/raytrace.png -compose src /tmp/diff.png
     open /tmp/diff.png

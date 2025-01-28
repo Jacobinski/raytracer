@@ -1,0 +1,22 @@
+/// RNG is a random number generator using the Linear Congruential Generator algorithm.
+pub struct RNG {
+    x: u64,
+}
+
+// Parameters from Knuth and H. W. Lewis.
+// https://en.wikipedia.org/wiki/Linear_congruential_generator
+const A: u64 = 1664525;
+const C: u64 = 1013904223;
+const M: u64 = 1 << 32;
+
+impl RNG {
+    pub fn new(seed: u64) -> Self {
+        RNG { x: seed }
+    }
+
+    // Generates a random number in the range [0, 1)
+    pub fn generate(&mut self) -> f32 {
+        self.x = (A * self.x + C) % M;
+        self.x as f32 / M as f32
+    }
+}
