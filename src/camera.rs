@@ -11,7 +11,7 @@ const MAX_COLOR: i32 = 256;
 #[derive(Debug, PartialEq, Default)]
 pub struct Camera {
     /// Public modifiable state
-    aspect_ratio: f32, // Ratio of image width over height.
+    aspect_ratio: f64, // Ratio of image width over height.
     image_width: u32,       // Rendered image width in pixel count
     samples_per_pixel: u32, // Number of samples for anti-aliasing
 
@@ -38,7 +38,7 @@ fn align(vec: Vec3, normal: Vec3) -> Vec3 {
 }
 
 fn color(r: Ray, world: &HittableList, rng: &mut Rng) -> Color {
-    if let Some(rec) = world.hit(r, &Interval::new(0.0, f32::INFINITY)) {
+    if let Some(rec) = world.hit(r, &Interval::new(0.0, f64::INFINITY)) {
         let v = Vec3::new_random_unit_vector(rng);
         let scatter_direction = align(v, rec.normal);
         return 0.5 * color(Ray::new(rec.pt, scatter_direction), world, rng);
@@ -66,7 +66,7 @@ impl Camera {
                         let ray = self.stochastic_ray(i, j, rng);
                         c = c + color(ray, world, rng);
                     }
-                    c = c / self.samples_per_pixel as f32;
+                    c = c / self.samples_per_pixel as f64;
                     c.output();
                 } else {
                     let ray = self.standard_ray(i, j);
@@ -87,8 +87,8 @@ impl Camera {
         let x = rng.generate() - 0.5;
         let y = rng.generate() - 0.5;
         let pixel = self.pixel00
-            + ((u as f32 + x) * self.pixel_delta_u)
-            + ((v as f32 + y) * self.pixel_delta_v);
+            + ((u as f64 + x) * self.pixel_delta_u)
+            + ((v as f64 + y) * self.pixel_delta_v);
         let origin = self.center;
         let direction = pixel - origin;
         Ray::new(origin, direction)
@@ -117,7 +117,7 @@ impl CameraBuilder {
     }
 
     /// Ratio of image width over height.
-    pub fn aspect_ratio(mut self, ratio: f32) -> Self {
+    pub fn aspect_ratio(mut self, ratio: f64) -> Self {
         assert!(ratio > 0.0);
         self.camera.aspect_ratio = ratio;
         self
@@ -148,7 +148,7 @@ impl CameraBuilder {
         assert!(samples_per_pixel >= 1);
 
         // Determine height of output image
-        let image_height = (image_width as f32 / aspect_ratio) as u32;
+        let image_height = (image_width as f64 / aspect_ratio) as u32;
         assert!(image_height >= 1);
 
         let center = Point3::new(0.0, 0.0, 0.0);
@@ -156,15 +156,15 @@ impl CameraBuilder {
         // Determine viewport dimensions
         let focal_length = 1.0;
         let viewport_height = 2.0;
-        let viewport_width = viewport_height * image_width as f32 / image_height as f32;
+        let viewport_width = viewport_height * image_width as f64 / image_height as f64;
 
         // Calculate the vectors across the viewport edges
         let viewport_u = Vec3::new(viewport_width, 0.0, 0.0);
         let viewport_v = Vec3::new(0.0, -viewport_height, 0.0);
 
         // Calculate the delta vectors between pixels
-        let pixel_delta_u = viewport_u / image_width as f32;
-        let pixel_delta_v = viewport_v / image_height as f32;
+        let pixel_delta_u = viewport_u / image_width as f64;
+        let pixel_delta_v = viewport_v / image_height as f64;
 
         // Calculate the location of the upper left pixel
         let viewport_upper_left =

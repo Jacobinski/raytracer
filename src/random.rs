@@ -15,8 +15,8 @@ impl Rng {
     }
 
     // Generates a random number in the range [0, 1)
-    pub fn generate(&mut self) -> f32 {
+    pub fn generate(&mut self) -> f64 {
         self.x = (A * self.x + C) % M;
-        self.x as f32 / M as f32
+        self.x as f64 / M as f64
     }
 }

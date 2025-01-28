@@ -5,11 +5,11 @@ use crate::vec3::{dot, Point3};
 
 pub struct Sphere {
     center: Point3,
-    radius: f32,
+    radius: f64,
 }
 
 impl Sphere {
-    pub fn new(center: Point3, radius: f32) -> Self {
+    pub fn new(center: Point3, radius: f64) -> Self {
         assert!(radius >= 0.0);
         Self { radius, center }
     }
@@ -27,9 +27,9 @@ impl Hittable for Sphere {
             return None;
         }
 
-        let mut root = (h - f32::sqrt(discriminant)) / a;
+        let mut root = (h - f64::sqrt(discriminant)) / a;
         if !time.surrounds(root) {
-            root = (h + f32::sqrt(discriminant)) / a;
+            root = (h + f64::sqrt(discriminant)) / a;
             if !time.surrounds(root) {
                 return None;
             }
