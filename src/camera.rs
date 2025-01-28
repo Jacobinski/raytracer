@@ -6,7 +6,10 @@ use crate::ray::Ray;
 use crate::vec3::{dot, unit_vector, Point3, Vec3};
 
 // The maximum value for each color according to the PPM specification.
-const MAX_COLOR: i32 = 256;
+const MAX_COLOR: u32 = 256;
+
+// The maximum number of ray bounces into the scene.
+const MAX_RAY_BOUNCES: u32 = 8;
 
 #[derive(Debug, PartialEq, Default)]
 pub struct Camera {
@@ -37,11 +40,15 @@ fn align(vec: Vec3, normal: Vec3) -> Vec3 {
     }
 }
 
-fn color(r: Ray, world: &HittableList, rng: &mut Rng) -> Color {
+fn color(r: Ray, depth: u32, world: &HittableList, rng: &mut Rng) -> Color {
+    if depth == 0 {
+        return Color::new(0.0, 0.0, 0.0);
+    }
     if let Some(rec) = world.hit(r, &Interval::new(0.0, f64::INFINITY)) {
         let v = Vec3::new_random_unit_vector(rng);
         let scatter_direction = align(v, rec.normal);
-        return 0.5 * color(Ray::new(rec.pt, scatter_direction), world, rng);
+        let scatter_ray = Ray::new(rec.pt, scatter_direction);
+        return 0.5 * color(scatter_ray, depth - 1, world, rng);
     }
     let unit_direction = unit_vector(r.direction());
     let a = 0.5 * (unit_direction.y() + 1.0);
@@ -64,13 +71,13 @@ impl Camera {
                     let mut c = Color::new(0.0, 0.0, 0.0);
                     for _sample in 0..self.samples_per_pixel {
                         let ray = self.stochastic_ray(i, j, rng);
-                        c = c + color(ray, world, rng);
+                        c = c + color(ray, MAX_RAY_BOUNCES, world, rng);
                     }
                     c = c / self.samples_per_pixel as f64;
                     c.output();
                 } else {
                     let ray = self.standard_ray(i, j);
-                    let c = color(ray, world, rng);
+                    let c = color(ray, MAX_RAY_BOUNCES, world, rng);
                     c.output();
                 }
             }
