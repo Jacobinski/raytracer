@@ -3,7 +3,7 @@ use crate::hittable_list::HittableList;
 use crate::interval::Interval;
 use crate::random::Rng;
 use crate::ray::Ray;
-use crate::vec3::{dot, unit_vector, Point3, Vec3};
+use crate::vec3::{unit_vector, Point3, Vec3};
 
 // The maximum value for each color according to the PPM specification.
 const MAX_COLOR: u32 = 256;
@@ -36,14 +36,13 @@ pub struct CameraBuilder {
     camera: Camera,
 }
 
-// Aligns a given vector with the normal. Concretely, ensures that the
-// dot product between the vector and normal is not negative.
-fn align(vec: Vec3, normal: Vec3) -> Vec3 {
-    if dot(vec, normal) >= 0.0 {
-        vec
-    } else {
-        -vec
-    }
+// Constructs a new ray for an intersection at the given normal following a
+// Lambert's cosine law I = I0 cos(theta).
+// https://en.wikipedia.org/wiki/Lambert%27s_cosine_law
+// https://en.wikipedia.org/wiki/Lambertian_reflectance
+fn lambertian_ray(point: Point3, normal: Vec3, rng: &mut Rng) -> Ray {
+    let dir = normal + Vec3::new_random_unit_vector(rng);
+    Ray::new(point, dir)
 }
 
 fn color(r: Ray, depth: u32, world: &HittableList, rng: &mut Rng) -> Color {
@@ -51,9 +50,7 @@ fn color(r: Ray, depth: u32, world: &HittableList, rng: &mut Rng) -> Color {
         return Color::new(0.0, 0.0, 0.0);
     }
     if let Some(rec) = world.hit(r, &Interval::new(MIN_RAY_INTERSECTION_TIME, f64::INFINITY)) {
-        let v = Vec3::new_random_unit_vector(rng);
-        let reflect_direction = align(v, rec.normal);
-        let reflect_ray = Ray::new(rec.pt, reflect_direction);
+        let reflect_ray = lambertian_ray(rec.pt, rec.normal, rng);
         return 0.5 * color(reflect_ray, depth - 1, world, rng);
     }
     let unit_direction = unit_vector(r.direction());
