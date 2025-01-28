@@ -20,7 +20,7 @@ fn main() {
         .samples_per_pixel(100)
         .build();
 
-    let mut rng = random::RNG::new(42);
+    let mut rng = random::Rng::new(42);
 
     let mut world = HittableList::new();
     world.add(Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5)));

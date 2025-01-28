@@ -1,7 +1,7 @@
 use crate::color::Color;
 use crate::hittable_list::HittableList;
 use crate::interval::Interval;
-use crate::random::RNG;
+use crate::random::Rng;
 use crate::ray::Ray;
 use crate::vec3::{unit_vector, Point3, Vec3};
 
@@ -41,7 +41,7 @@ impl Camera {
         CameraBuilder::new()
     }
 
-    pub fn render(&self, world: &HittableList, rng: &mut RNG) {
+    pub fn render(&self, world: &HittableList, rng: &mut Rng) {
         println!("P3");
         println!("{} {}", self.image_width, self.image_height);
         println!("{}", MAX_COLOR);
@@ -71,7 +71,7 @@ impl Camera {
 
     // Constructs a Ray from the Camera to the viewport pixel (u, v) with a bit
     // of stochastic offsetting to allow for anti-aliasing.
-    fn stochastic_ray(&self, u: u32, v: u32, rng: &mut RNG) -> Ray {
+    fn stochastic_ray(&self, u: u32, v: u32, rng: &mut Rng) -> Ray {
         let x = rng.generate() - 0.5;
         let y = rng.generate() - 0.5;
         let pixel = self.pixel00

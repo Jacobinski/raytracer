@@ -1,5 +1,5 @@
 /// RNG is a random number generator using the Linear Congruential Generator algorithm.
-pub struct RNG {
+pub struct Rng {
     x: u64,
 }
 
@@ -9,9 +9,9 @@ const A: u64 = 1664525;
 const C: u64 = 1013904223;
 const M: u64 = 1 << 32;
 
-impl RNG {
+impl Rng {
     pub fn new(seed: u64) -> Self {
-        RNG { x: seed }
+        Rng { x: seed }
     }
 
     // Generates a random number in the range [0, 1)
